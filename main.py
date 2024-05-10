@@ -1,6 +1,6 @@
 from tkinter import *
 from tkinter import messagebox as mb
-import pymorphy2
+import pymorphy3
 
 # Функция для начала игры
 def Start_Game():
@@ -69,7 +69,7 @@ def Over_Game():
 
 # Функция, которая запускается при нажатии клавиши пользователем
 def Game_Started(event):
-    global bot, sim, record, delete_cities, statistics_click_user
+    global bot, sim, record, delete_cities, statistics_click_user,original_record
     user = ""
     text = event.widget.get("1.0", "end-1c")  # Получаем весь текст из виджета
     TextPole_lines = text.split('\n')
@@ -107,30 +107,37 @@ def Game_Started(event):
                                 delete_cities.add(candidate)
                                 cities.remove(candidate)
                                 TextPole.insert(END, '\n>>>>>>>> БОТ: ' + candidate)
-                                if existing_cities_1 == False and existing_cities_2 == False:
-                                    mb.showinfo("Информация", "Игра окончена. Города закончились")
+                                if candidate[-1] in sim:
+                                    TextPole.insert(END, '\nВам на букву "' + candidate[-2] + '".')
                                 else:
-                                    if candidate[-1] in sim:
-                                        TextPole.insert(END, '\nВам на букву "' + candidate[-2] + '".')
-                                    else:
-                                        TextPole.insert(END, '\nВам на букву "' + candidate[-1] + '".')
-                                    break
-                    else:
+                                    TextPole.insert(END, '\nВам на букву "' + candidate[-1] + '".')
+                                break
+                    elif not existing_cities_1 and existing_cities_2:
                         for candidate in existing_cities_2:
                             if candidate.lower()[0] == user[-2]:
                                 bot = candidate
                                 delete_cities.add(candidate)
                                 cities.remove(candidate)
                                 TextPole.insert(END, '\n>>>>>>>> БОТ: ' + candidate)
-                                if not existing_cities_1 and not existing_cities_2:
-                                    mb.showinfo("Информация", "Игра окончена. Города закончились")
+                                if candidate[-1] in sim:
+                                    TextPole.insert(END, '\nВам на букву "' + candidate[-2] + '".')
                                 else:
-                                    if candidate[-1] in sim:
-                                        TextPole.insert(END, '\nВам на букву "' + candidate[-2] + '".')
-                                    else:
-                                        TextPole.insert(END, '\nВам на букву "' + candidate[-1] + '".')
-                                    break
-            elif bot[-1] in sim or not existing_cities_1 or (bot[-1] == 'й' and 'Йошкар-Ола' not in cities):
+                                    TextPole.insert(END, '\nВам на букву "' + candidate[-1] + '".')
+                                break
+                    elif not existing_cities_1 and not existing_cities_2:
+                        mb.showinfo("Информация", f"Игра окончена. Города закончились.")
+                        TextPole.insert(END, f"\nИгра окончена! Вы назвали {str(record)} {deviation(record)}")
+                        TextPole.configure(state=DISABLED)
+                        if record > original_record:
+                            if original_record != 0:
+                                mb.showinfo("Информация", f"Поздравляю, Игрок! Вы побили свой рекорд!"
+                                                          f"\nВы назвали {record} {deviation(record)}")
+                            original_record = record
+                            record_label.config(text=f'Ваш рекорд\n{original_record} {deviation(record)}')
+                        record = 0
+                        cities.update(delete_cities)  # Восстанавливаем множество городов
+                        delete_cities.clear()
+            elif bot[-1] in sim or not existing_cities_1:
                 if user.lower()[0] != bot[-2]:
                     mb.showerror("Ошибка", f"Неправильно. город должен начинаться с буквы '{bot[-2]}'.")
                 else:
@@ -152,32 +159,36 @@ def Game_Started(event):
                                 delete_cities.add(candidate)
                                 cities.remove(candidate)
                                 TextPole.insert(END, '\n>>>>>>>> БОТ: ' + candidate)
-                                if existing_cities_1 == False and existing_cities_2 == False:
-                                    mb.showinfo("Информация", "Игра окончена. Города закончились")
+                                if candidate[-1] in sim:
+                                    TextPole.insert(END, '\nВам на букву "' + candidate[-2] + '".')
                                 else:
-                                    if candidate[-1] in sim:
-                                        TextPole.insert(END, '\nВам на букву "' + candidate[-2] + '".')
-                                    else:
-                                        TextPole.insert(END, '\nВам на букву "' + candidate[-1] + '".')
-                                    break
-                    else:
-                        for candidate in existing_cities_2:
-                            if candidate.lower()[0] == user[-2]:
-                                bot = candidate
-                                delete_cities.add(candidate)
-                                cities.remove(candidate)
-                                TextPole.insert(END, '\n>>>>>>>> БОТ: ' + candidate)
-                                if not existing_cities_1 and not existing_cities_2:
-                                    mb.showinfo("Информация", "Игра окончена. Города закончились")
-                                else:
-                                    if candidate[-1] in sim:
-                                        TextPole.insert(END, '\nВам на букву "' + candidate[-2] + '".')
-                                    else:
-                                        TextPole.insert(END, '\nВам на букву "' + candidate[-1] + '".')
-                                    break
-            if not existing_cities_1 and not existing_cities_2:
-                TextPole.configure(state=DISABLED)
-                mb.showinfo("Информация", f"Игра окончена. Города закончились.")
+                                    TextPole.insert(END, '\nВам на букву "' + candidate[-1] + '".')
+                                break
+                            elif not existing_cities_1:
+                                for candidate in existing_cities_2:
+                                    if candidate.lower()[0] == user[-2]:
+                                        bot = candidate
+                                        delete_cities.add(candidate)
+                                        cities.remove(candidate)
+                                        TextPole.insert(END, '\n>>>>>>>> БОТ: ' + candidate)
+                                        if candidate[-1] in sim:
+                                            TextPole.insert(END, '\nВам на букву "' + candidate[-2] + '".')
+                                        else:
+                                            TextPole.insert(END, '\nВам на букву "' + candidate[-1] + '".')
+                                        break
+                            elif not existing_cities_1 and not existing_cities_2:
+                                mb.showinfo("Информация", f"Игра окончена. Города закончились.")
+                                TextPole.insert(END, f"\nИгра окончена! Вы назвали {str(record)} {deviation(record)}")
+                                TextPole.configure(state=DISABLED)
+                                if record > original_record:
+                                    if original_record != 0:
+                                        mb.showinfo("Информация", f"Поздравляю, Игрок! Вы побили свой рекорд!"
+                                                                  f"\nВы назвали {record} {deviation(record)}")
+                                    original_record = record
+                                    record_label.config(text=f'Ваш рекорд\n{original_record} {deviation(record)}')
+                                record = 0
+                                cities.update(delete_cities)  # Восстанавливаем множество городов
+                                delete_cities.clear()
 
 # Функция для кнопки подсказки
 def Clue_Button():
@@ -204,17 +215,10 @@ def Clue_Button():
 # Функция для вывода статистики
 def Statistics_button():
     global statistics_click_start, statistics_click_clue, statistics_click_user, user_cities
-    if user_cities == []:
-        mb.showinfo("Статистика о сессии",
-                    f"Запущенно игр - {statistics_click_start}\n"
-                    f"Названо городов - {statistics_click_user}\n"
-                    f"Использовано подсказок - {statistics_click_clue}\n")
-    else:
-        mb.showinfo("Статистика о сессии",
-                    f"Запущенно игр - {statistics_click_start}\n"
-                    f"Названо городов - {statistics_click_user}\n"
-                    f"Использовано подсказок - {statistics_click_clue}\n")
-
+    mb.showinfo("Статистика о сессии",
+                f"Запущенно игр - {statistics_click_start}\n"
+                f"Названо городов - {statistics_click_user}\n"
+                f"Использовано подсказок - {statistics_click_clue}\n")
 # Создание главного окна
 root = Tk()
 root.resizable(False, False)
@@ -234,8 +238,8 @@ cities = set(cities_list)
 delete_cities = set()
 user_cities = []
 
-morph = pymorphy2.MorphAnalyzer() # вызов конструктора класса MorphAnalyzer
-sim = ('ъ', 'ь', 'ы', 'ё')  # Список символов исключений
+morph = pymorphy3.MorphAnalyzer() # вызов конструктора класса MorphAnalyzer.
+sim = ('ъ', 'ь', 'ы', 'ё', 'й')  # Кортеж символов исключений.
 bot = cities.pop()
 click_count = 0
 original_record = 0
